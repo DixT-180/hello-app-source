@@ -9,6 +9,7 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout app-source') {
       steps {
         checkout scm
@@ -33,30 +34,32 @@ pipeline {
     }
 
     stage('Update hello-app-chart') {
-  steps {
-    withCredentials([usernamePassword(credentialsId: 'hello-app-source', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]) {
-      sh """
-        rm -rf chart-repo
-        git clone https://\$GH_USER:\$GH_PAT@${CHART_REPO} chart-repo
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'hello-app-source', usernameVariable: 'GH_USER', passwordVariable: 'GH_PAT')]) {
+          sh """
+            rm -rf chart-repo
+            git clone https://\$GH_USER:\$GH_PAT@${CHART_REPO} chart-repo
 
-        cd chart-repo
+            cd chart-repo
 
-        yq -i '.image.tag = "${IMAGE_TAG}"' values.yaml
+            yq -i '.image.tag = "${IMAGE_TAG}"' values.yaml
 
-        git config user.email "jenkins@ci"
-        git config user.name "jenkins"
+            git config user.email "jenkins@ci"
+            git config user.name "jenkins"
 
-        if git diff --quiet; then
-          echo "No changes to commit. Image tag is already ${IMAGE_TAG}."
-        else
-          git add values.yaml
-          git commit -m "Update image to ${IMAGE_TAG}"
-          git push https://\$GH_USER:\$GH_PAT@${CHART_REPO} main
-        fi
-      """
+            if git diff --quiet; then
+              echo "No changes to commit. Image tag is already ${IMAGE_TAG}."
+            else
+              git add values.yaml
+              git commit -m "Update image to ${IMAGE_TAG}"
+              git push https://\$GH_USER:\$GH_PAT@${CHART_REPO} main
+            fi
+          """
+        }
+      }
     }
-  }
-}
+
+  }   // <-- closes stages
 
   post {
     always {
