@@ -1,33 +1,17 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+@app.route("/", methods=["GET", "POST"])
+def index():
+    result = None
 
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok"})
+    if request.method == "POST":
+        a = float(request.form["a"])
+        b = float(request.form["b"])
+        result = a + b
 
-
-@app.route("/add", methods=["POST"])
-def add():
-    data = request.get_json()
-
-    a = data.get("a")
-    b = data.get("b")
-
-    if a is None or b is None:
-        return jsonify({
-            "error": "Both 'a' and 'b' are required"
-        }), 400
-
-    result = a + b
-
-    return jsonify({
-        "a": a,
-        "b": b,
-        "result": result
-    })
-
+    return render_template("index.html", result=result)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8085)
